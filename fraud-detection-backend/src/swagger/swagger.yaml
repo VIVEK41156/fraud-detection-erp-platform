@@ -1,0 +1,376 @@
+openapi: 3.0.0
+
+info:
+  title: Fraud Detection API
+  version: 1.0.0
+  description: Fraud Detection Payment Backend APIs
+
+servers:
+  - url: http://localhost:5000
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+tags:
+  - name: Auth
+    description: Authentication APIs
+
+  - name: Transactions
+    description: Payment Transaction APIs
+
+  - name: Analytics
+    description: Fraud Analytics APIs
+
+  - name: Admin
+    description: Admin Management APIs
+
+  - name: Dashboard
+    description: Dashboard Monitoring APIs
+
+paths:
+  /:
+    get:
+      summary: Check Server Status
+      responses:
+        "200":
+          description: Server Running
+
+  # ---------------- AUTH ----------------
+
+  /api/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register User
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Vivek
+
+                email:
+                  type: string
+                  example: vivek@gmail.com
+
+                password:
+                  type: string
+                  example: 123456
+
+      responses:
+        "201":
+          description: User Registered
+
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login User
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: rohit2026@gmail.com
+
+                password:
+                  type: string
+                  example: 123456
+
+      responses:
+        "200":
+          description: Login Success
+
+  /api/auth/profile:
+    get:
+      tags:
+        - Auth
+      summary: Get User Profile
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: User Profile
+
+  # ---------------- TRANSACTIONS ----------------
+
+  /api/transactions:
+    post:
+      tags:
+        - Transactions
+      summary: Create Transaction
+
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  example: 90000
+
+                currency:
+                  type: string
+                  example: INR
+
+                paymentMethod:
+                  type: string
+                  example: Credit Card
+
+                merchantName:
+                  type: string
+                  example: CryptoX
+
+                merchantCategory:
+                  type: string
+                  example: Crypto
+
+                location:
+                  type: string
+                  example: Nigeria
+
+                deviceType:
+                  type: string
+                  example: Desktop
+
+                ipAddress:
+                  type: string
+                  example: 10.20.30.40
+
+      responses:
+        "201":
+          description: Transaction Created
+
+    get:
+      tags:
+        - Transactions
+      summary: Get All Transactions
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Transactions List
+
+  /api/transactions/{id}:
+    get:
+      tags:
+        - Transactions
+      summary: Get Transaction By ID
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: Single Transaction
+
+    delete:
+      tags:
+        - Transactions
+      summary: Delete Transaction
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+      responses:
+        "200":
+          description: Transaction Deleted
+
+  # ---------------- ANALYTICS ----------------
+
+  /api/analytics/overview:
+    get:
+      tags:
+        - Analytics
+      summary: Get Analytics Overview
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Analytics Overview
+
+  /api/analytics/fraud-rate:
+    get:
+      tags:
+        - Analytics
+      summary: Get Fraud Transactions
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Fraud Transactions
+
+  /api/analytics/high-risk:
+    get:
+      tags:
+        - Analytics
+      summary: Get High Risk Transactions
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: High Risk Transactions
+
+  /api/analytics/monthly-stats:
+    get:
+      tags:
+        - Analytics
+      summary: Get Monthly Statistics
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Monthly Stats
+
+  # ---------------- ADMIN ----------------
+
+  /api/admin/users:
+    get:
+      tags:
+        - Admin
+      summary: Get All Users
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Users List
+
+  /api/admin/transactions:
+    get:
+      tags:
+        - Admin
+      summary: Get All Transactions
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Transactions List
+
+  /api/admin/frauds:
+    get:
+      tags:
+        - Admin
+      summary: Get Fraud Transactions
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Fraud Transactions
+
+  /api/admin/logs:
+    get:
+      tags:
+        - Admin
+      summary: Get Audit Logs
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Audit Logs List
+
+  # ---------------- DASHBOARD ----------------
+
+  /api/dashboard/stats:
+    get:
+      tags:
+        - Dashboard
+      summary: Get Dashboard Stats
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Dashboard Stats
+
+  /api/dashboard/recent-frauds:
+    get:
+      tags:
+        - Dashboard
+      summary: Get Recent Frauds
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Recent Frauds
+
+  /api/dashboard/risk-distribution:
+    get:
+      tags:
+        - Dashboard
+      summary: Get Risk Distribution
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Risk Distribution
+
+  /api/dashboard/top-risk-merchants:
+    get:
+      tags:
+        - Dashboard
+      summary: Get Top Risk Merchants
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Top Merchants
