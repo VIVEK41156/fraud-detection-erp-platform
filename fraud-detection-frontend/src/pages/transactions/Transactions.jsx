@@ -45,6 +45,7 @@ function Transactions() {
   const [showForm, setShowForm]               = useState(false);
   const [submitting, setSubmitting]           = useState(false);
   const [otpLoading, setOtpLoading]           = useState(false);
+  const [slowWarning, setSlowWarning]         = useState(false);
 
   // ─── fetch ───────────────────────────────────────────────────
   const fetchTransactions = useCallback(async () => {
@@ -68,15 +69,20 @@ function Transactions() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+    setSlowWarning(false);
     try {
-      // 30-second client-side timeout — backend should respond in <5s now
+      // 90s timeout — Render free tier needs up to 60s to cold-start
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 30000);
+      const timer      = setTimeout(() => controller.abort(), 90000);
+      // Show warning after 6s so user knows server is waking up
+      const warnTimer  = setTimeout(() => setSlowWarning(true), 6000);
 
       const res = await API.post("/transactions", formData, {
         signal: controller.signal,
       });
       clearTimeout(timer);
+      clearTimeout(warnTimer);
+      setSlowWarning(false);
 
       const msg = res.data.message || "Transaction created!";
       if (res.data.transaction?.transactionStatus === "Pending OTP") {
@@ -92,12 +98,13 @@ function Transactions() {
       setShowForm(false);
     } catch (e) {
       if (e.name === "AbortError" || e.code === "ERR_CANCELED") {
-        toast.error("Request timed out. Please try again.");
+        toast.error("Server timeout. Click create again — it should be faster now!");
       } else {
         toast.error(e.response?.data?.message || "Failed to create transaction.");
       }
     } finally {
       setSubmitting(false);
+      setSlowWarning(false);
     }
   };
 
@@ -230,7 +237,7 @@ function Transactions() {
             <div style={{ display: "flex", gap: 12 }}>
               <button type="submit" className="btn-primary" disabled={submitting}>
                 {submitting
-                  ? <><div className="spinner" /> Analysing with AI...</>
+                  ? <><div className="spinner" /> {slowWarning ? "Waking up server..." : "Analysing with AI..."}</>
                   : <><MdAdd /> Create & Analyse</>}
               </button>
               <button type="button" className="btn-ghost" onClick={() => setShowForm(false)}>
