@@ -54,12 +54,13 @@ const createTransaction =
       try {
         const mlResponse =
           await axios.post(
-            "http://127.0.0.1:5001/predict",
+            process.env.ML_SERVICE_URL || "http://127.0.0.1:5001/predict",
             {
               amount,
               location,
               merchantCategory,
-            }
+            },
+            { timeout: 3000 }
           );
 
         riskScore =
@@ -113,7 +114,8 @@ const createTransaction =
         try {
           const ipRes =
             await axios.get(
-              "https://api.ipify.org?format=json"
+              "https://api.ipify.org?format=json",
+              { timeout: 3000 }
             );
 
           detectedIp =
