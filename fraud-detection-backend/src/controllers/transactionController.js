@@ -49,18 +49,32 @@ const createTransaction =
         false;
 
       // ----------------------
-      // ML PREDICTION
+      // COMPUTE RISK FEATURES
       // ----------------------
+      const HIGH_RISK_LOCATIONS = ["south asia", "nigeria", "russia", "eastern europe", "anonymous", "unknown"];
+      const HIGH_RISK_CATEGORIES = ["crypto", "gambling", "forex", "adult", "darkweb", "cryptox"];
+      const HIGH_RISK_MERCHANTS  = ["cryptox", "betking", "fxpro", "coinbase", "binance"];
+
+      const locationRisk  = HIGH_RISK_LOCATIONS.some(l => location?.toLowerCase().includes(l)) ? 1 : 0;
+      const merchantRisk  = HIGH_RISK_CATEGORIES.some(c => merchantCategory?.toLowerCase().includes(c)) ||
+                            HIGH_RISK_MERCHANTS.some(m => merchantName?.toLowerCase().includes(m)) ? 1 : 0;
+      const deviceRisk    = deviceType?.toLowerCase() === "mobile" ? 1 : 0;
+      const velocityRisk  = Number(amount) > 200000 ? 1 : 0;
+      const spendingSpike = Number(amount) > 500000 ? 1 : 0;
+
       try {
         const mlResponse =
           await axios.post(
             process.env.ML_SERVICE_URL || "http://127.0.0.1:5001/predict",
             {
-              amount,
-              location,
-              merchantCategory,
+              amount:        Number(amount),
+              locationRisk,
+              deviceRisk,
+              merchantRisk,
+              velocityRisk,
+              spendingSpike,
             },
-            { timeout: 3000 }
+            { timeout: 5000 }
           );
 
         riskScore =
@@ -80,18 +94,15 @@ const createTransaction =
           error.message
         );
 
-        // fallback logic
-        if (
-          Number(
-            amount
-          ) > 500000
-        ) {
-          riskScore =
-            85;
-
-          isFraud =
-            true;
-        }
+        // ----------------------
+        // SMART FALLBACK SCORING
+        // Uses pre-computed risk features
+        // ----------------------
+        const riskFactors = locationRisk + merchantRisk + deviceRisk + velocityRisk + spendingSpike;
+        const baseScore   = Math.min(Number(amount) / 10000, 30); // up to 30 pts from amount
+        const featureScore = riskFactors * 15;                    // up to 75 pts from risk features
+        riskScore = Math.min(Math.round(baseScore + featureScore), 99);
+        isFraud   = riskScore >= 70;
       }
 
       // ----------------------

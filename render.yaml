@@ -1,0 +1,28 @@
+services:
+  # ─────────────────────────────────
+  # Node.js Backend API
+  # ─────────────────────────────────
+  - type: web
+    name: fraud-detection-erp-platform
+    runtime: node
+    rootDir: fraud-detection-backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ML_SERVICE_URL
+        value: https://fraud-ml-service.onrender.com/predict
+
+  # ─────────────────────────────────
+  # Python Flask ML Service
+  # ─────────────────────────────────
+  - type: web
+    name: fraud-ml-service
+    runtime: python
+    rootDir: ml-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: PORT
+        value: 8000
