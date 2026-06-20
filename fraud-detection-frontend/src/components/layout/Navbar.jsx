@@ -1,240 +1,184 @@
+import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import {
-  FaBell,
-  FaCog,
-  FaMoon,
-  FaSignOutAlt,
-  FaUser,
-} from "react-icons/fa";
-
-import {
-  useState,
-  useEffect,
-} from "react";
+  MdNotifications,
+  MdSettings,
+  MdPerson,
+  MdLogout,
+  MdLightMode,
+  MdDarkMode,
+  MdWarning,
+} from "react-icons/md";
 
 import API from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 
 function Navbar() {
-  const { user, logout } =
-    useAuth();
+  const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
-  const [showMenu,
-    setShowMenu] =
-    useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
-  const [showNotifications,
-    setShowNotifications] =
-    useState(false);
+  const menuRef = useRef(null);
+  const notifRef = useRef(null);
 
-  const [notifications,
-    setNotifications] =
-    useState([]);
-
-  const fetchNotifications =
-    async () => {
-      try {
-        const res =
-          await API.get(
-            "/admin/frauds"
-          );
-
-        const frauds =
-          res.data
-            .transactions ||
-          [];
-
-        setNotifications(
-          frauds.slice(
-            0,
-            5
-          )
-        );
-      } catch (error) {
-        console.log(
-          error
-        );
-      }
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false);
+      if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifications(false);
     };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await API.get("/admin/frauds");
+        const frauds = res.data.transactions || res.data.frauds || [];
+        setNotifications(frauds.slice(0, 5));
+      } catch (e) {}
+    };
     fetchNotifications();
   }, []);
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-[35px] p-6 flex justify-between items-center mb-10">
-
+    <div className="topbar">
       {/* Left */}
-      <div>
-        <h1 className="text-4xl font-bold text-white">
-          Welcome,
-          {" "}
-          {
-            user?.name
-          }
+      <div className="topbar-left">
+        <h1>
+          Welcome back,{" "}
+          <span>{user?.name?.split(" ")[0]}</span>
         </h1>
-
-        <div className="flex items-center gap-3 mt-2">
-
-          <p className="text-slate-400">
-            Role:
-          </p>
-
-          <span
-            className={`px-4 py-1 rounded-full text-sm font-semibold ${
-              user?.role ===
-              "admin"
-                ? "bg-red-500/20 text-red-400"
-                : "bg-green-500/20 text-green-400"
-            }`}
-          >
-            {
-              user?.role
-            }
-          </span>
-
-        </div>
+        <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 2 }}>
+          {new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+        </p>
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-5 relative">
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
 
-        {/* Bell */}
-        <button
-          onClick={() =>
-            setShowNotifications(
-              !showNotifications
-            )
-          }
-          className="relative bg-slate-800 hover:bg-slate-700 p-4 rounded-2xl text-white"
-        >
-          <FaBell />
-
-          {notifications.length >
-            0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-xs rounded-full w-6 h-6 flex items-center justify-center">
-              {
-                notifications.length
-              }
-            </span>
-          )}
+        {/* Theme Toggle */}
+        <button className="btn-icon" onClick={toggleTheme} title="Toggle theme">
+          {theme === "dark" ? <MdLightMode /> : <MdDarkMode />}
         </button>
 
-        {/* Notification Dropdown */}
-        {showNotifications && (
-          <div className="absolute top-20 right-24 w-96 bg-slate-900 border border-slate-700 rounded-3xl p-5 shadow-2xl z-50">
-
-            <h2 className="text-white text-xl font-bold mb-5">
-              Notifications
-            </h2>
-
-            {notifications.map(
-              (
-                item
-              ) => (
-                <div
-                  key={
-                    item._id
-                  }
-                  className="bg-slate-800 rounded-2xl p-4 mb-4"
-                >
-                  <p className="text-red-400 font-semibold">
-                    🚨 Fraud Alert
-                  </p>
-
-                  <p className="text-white mt-1">
-                    {
-                      item.merchantName
-                    }
-                    {" - "}
-                    ₹
-                    {
-                      item.amount
-                    }
-                  </p>
-
-                  <p className="text-slate-400 text-sm">
-                    {
-                      item.location
-                    }
-                  </p>
-                </div>
-              )
+        {/* Notifications */}
+        <div ref={notifRef} style={{ position: "relative" }}>
+          <button
+            className="btn-icon"
+            onClick={() => { setShowNotifications(!showNotifications); setShowMenu(false); }}
+            style={{ position: "relative" }}
+          >
+            <MdNotifications />
+            {notifications.length > 0 && (
+              <span style={{
+                position: "absolute",
+                top: 6,
+                right: 6,
+                width: 8,
+                height: 8,
+                background: "var(--danger)",
+                borderRadius: "50%",
+                border: "2px solid var(--bg-primary)",
+              }} />
             )}
-          </div>
-        )}
+          </button>
 
-        {/* Dark */}
-        <button className="bg-slate-800 p-4 rounded-2xl text-white">
-          <FaMoon />
-        </button>
+          {showNotifications && (
+            <div className="notif-panel">
+              <div className="notif-header">
+                <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+                  Fraud Alerts
+                </span>
+                {notifications.length > 0 && (
+                  <span className="badge badge-danger">{notifications.length}</span>
+                )}
+              </div>
 
-        {/* Settings */}
-        <a
-          href="/dashboard/settings"
-          className="bg-slate-800 p-4 rounded-2xl text-white hover:bg-slate-700 transition-all"
-        >
-          <FaCog />
-        </a>
-
-        {/* Avatar */}
-        <div
-          className="relative"
-          onClick={() =>
-            setShowMenu(
-              !showMenu
-            )
-          }
-        >
-          <div className="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-2xl cursor-pointer">
-
-            {user?.name?.[0]?.toUpperCase()}
-          </div>
-
-          {showMenu && (
-            <div className="absolute right-0 mt-4 w-64 bg-slate-900 border border-slate-700 rounded-3xl p-5 shadow-2xl z-50">
-
-              <h2 className="text-white font-bold">
-                {
-                  user?.name
-                }
-              </h2>
-
-              <p className="text-slate-400 text-sm mb-4">
-                {
-                  user?.email
-                }
-              </p>
-
-              <a
-                href="/dashboard/profile"
-                className="flex items-center gap-3 text-white hover:bg-slate-800 rounded-2xl p-4"
-              >
-                <FaUser />
-                Profile
-              </a>
-
-              <a
-                href="/dashboard/settings"
-                className="flex items-center gap-3 text-white hover:bg-slate-800 rounded-2xl p-4"
-              >
-                <FaCog />
-                Settings
-              </a>
-
-              <button
-                onClick={
-                  logout
-                }
-                className="w-full flex items-center gap-3 text-red-400 hover:bg-red-500/10 rounded-2xl p-4 mt-2"
-              >
-                <FaSignOutAlt />
-                Logout
-              </button>
-
+              {notifications.length === 0 ? (
+                <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>
+                  No active alerts
+                </div>
+              ) : (
+                notifications.map((item) => (
+                  <div key={item._id} className="notif-item">
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                      <div style={{
+                        width: 32, height: 32, borderRadius: 8,
+                        background: "var(--danger-bg)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        flexShrink: 0, fontSize: 14
+                      }}>
+                        <MdWarning style={{ color: "var(--danger)" }} />
+                      </div>
+                      <div>
+                        <p style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>
+                          {item.merchantName}
+                        </p>
+                        <p style={{ fontSize: 12, color: "var(--danger)", fontWeight: 600 }}>
+                          ₹{item.amount?.toLocaleString()}
+                        </p>
+                        <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
+                          {item.location}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
 
+        {/* Settings */}
+        <Link to="/dashboard/settings" className="btn-icon">
+          <MdSettings />
+        </Link>
+
+        {/* Avatar */}
+        <div ref={menuRef} style={{ position: "relative" }}>
+          <div
+            className="avatar"
+            style={{ width: 42, height: 42, fontSize: 15, cursor: "pointer", boxShadow: "var(--shadow-glow)" }}
+            onClick={() => { setShowMenu(!showMenu); setShowNotifications(false); }}
+          >
+            {user?.name?.[0]?.toUpperCase()}
+          </div>
+
+          {showMenu && (
+            <div className="dropdown">
+              <div className="dropdown-header">
+                <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+                  {user?.name}
+                </div>
+                <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
+                  {user?.email}
+                </div>
+                <span
+                  className={`badge ${user?.role === "admin" ? "badge-danger" : "badge-success"}`}
+                  style={{ marginTop: 8 }}
+                >
+                  {user?.role}
+                </span>
+              </div>
+
+              <Link to="/dashboard/profile" className="dropdown-item" onClick={() => setShowMenu(false)}>
+                <MdPerson /> Profile
+              </Link>
+              <Link to="/dashboard/settings" className="dropdown-item" onClick={() => setShowMenu(false)}>
+                <MdSettings /> Settings
+              </Link>
+              <button className="dropdown-item" onClick={logout} style={{ color: "var(--danger)", width: "100%" }}>
+                <MdLogout /> Sign Out
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

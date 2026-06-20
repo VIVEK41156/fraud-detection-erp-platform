@@ -1,99 +1,105 @@
-import {
-  FaChartPie,
-  FaMoneyBillWave,
-  FaUsers,
-  FaClipboardList,
-  FaExclamationTriangle,
-  FaSignOutAlt,
-} from "react-icons/fa";
-
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import {
+  MdDashboard,
+  MdSwapHoriz,
+  MdBarChart,
+  MdPeople,
+  MdWarning,
+  MdAssignment,
+  MdLogout,
+  MdShield,
+} from "react-icons/md";
 
 function Sidebar() {
-  const { user, logout } =
-    useAuth();
+  const { user, logout } = useAuth();
+  const isAdmin = user?.role === "admin";
 
-  const isAdmin =
-    user?.role === "admin";
+  const navItemClass = ({ isActive }) =>
+    `nav-item ${isActive ? "active" : ""}`;
 
   return (
-    <div className="w-[280px] h-screen bg-slate-900 border-r border-slate-800 p-6 fixed left-0 top-0">
+    <div className="sidebar">
+      {/* Logo */}
+      <div className="sidebar-logo">
+        <div className="sidebar-logo-icon">
+          <MdShield style={{ color: "white", fontSize: "20px" }} />
+        </div>
+        <div>
+          <div className="sidebar-logo-text">FraudShield</div>
+          <div className="sidebar-logo-sub">ERP Platform</div>
+        </div>
+      </div>
 
-      <h1 className="text-3xl font-bold text-white mb-10">
-        Fraud ERP
-      </h1>
+      {/* Nav */}
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        <div className="nav-section-label">Main Menu</div>
 
-      <div className="space-y-4">
-
-        {/* Dashboard */}
-        <Link
-          to="/dashboard"
-          className="flex items-center gap-4 bg-slate-800 hover:bg-slate-700 transition-all p-4 rounded-2xl text-white"
-        >
-          <FaChartPie />
+        <NavLink to="/dashboard" end className={navItemClass}>
+          <span className="nav-item-icon"><MdDashboard /></span>
           Dashboard
-        </Link>
+        </NavLink>
 
-        {/* Transactions */}
-        <Link
-          to="/dashboard/transactions"
-          className="flex items-center gap-4 bg-slate-800 hover:bg-slate-700 transition-all p-4 rounded-2xl text-white"
-        >
-          <FaMoneyBillWave />
+        <NavLink to="/dashboard/transactions" className={navItemClass}>
+          <span className="nav-item-icon"><MdSwapHoriz /></span>
           Transactions
-        </Link>
+        </NavLink>
 
-        {/* Admin Only */}
         {isAdmin && (
           <>
-            {/* Analytics */}
-            <Link
-              to="/dashboard/analytics"
-              className="flex items-center gap-4 bg-slate-800 hover:bg-slate-700 transition-all p-4 rounded-2xl text-white"
-            >
-              <FaClipboardList />
+            <div className="nav-section-label">Admin</div>
+
+            <NavLink to="/dashboard/analytics" className={navItemClass}>
+              <span className="nav-item-icon"><MdBarChart /></span>
               Analytics
-            </Link>
+            </NavLink>
 
-            {/* Users */}
-            <Link
-              to="/dashboard/users"
-              className="flex items-center gap-4 bg-slate-800 hover:bg-slate-700 transition-all p-4 rounded-2xl text-white"
-            >
-              <FaUsers />
+            <NavLink to="/dashboard/users" className={navItemClass}>
+              <span className="nav-item-icon"><MdPeople /></span>
               Users
-            </Link>
+            </NavLink>
 
-            {/* Frauds */}
-            <Link
-              to="/dashboard/frauds"
-              className="flex items-center gap-4 bg-slate-800 hover:bg-slate-700 transition-all p-4 rounded-2xl text-white"
-            >
-              <FaExclamationTriangle />
-              Frauds
-            </Link>
+            <NavLink to="/dashboard/frauds" className={navItemClass}>
+              <span className="nav-item-icon"><MdWarning /></span>
+              Fraud Monitor
+            </NavLink>
 
-            {/* Audit Logs */}
-            <Link
-              to="/dashboard/logs"
-              className="flex items-center gap-4 bg-slate-800 hover:bg-slate-700 transition-all p-4 rounded-2xl text-white"
-            >
-              <FaClipboardList />
+            <NavLink to="/dashboard/logs" className={navItemClass}>
+              <span className="nav-item-icon"><MdAssignment /></span>
               Audit Logs
-            </Link>
+            </NavLink>
           </>
         )}
+      </div>
 
-        {/* Logout */}
-        <button
-          onClick={logout}
-          className="w-full flex items-center gap-4 bg-red-600 hover:bg-red-700 transition-all p-4 rounded-2xl text-white mt-8"
-        >
-          <FaSignOutAlt />
-          Logout
+      {/* Bottom: User + Logout */}
+      <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "16px" }}>
+        {/* User chip */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          padding: "10px 12px",
+          borderRadius: "var(--radius-md)",
+          marginBottom: "8px",
+        }}>
+          <div className="avatar" style={{ width: 34, height: 34, fontSize: 13 }}>
+            {user?.name?.[0]?.toUpperCase()}
+          </div>
+          <div style={{ overflow: "hidden" }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {user?.name}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+              {user?.role}
+            </div>
+          </div>
+        </div>
+
+        <button className="nav-logout" onClick={logout}>
+          <span className="nav-item-icon"><MdLogout /></span>
+          Sign Out
         </button>
-
       </div>
     </div>
   );

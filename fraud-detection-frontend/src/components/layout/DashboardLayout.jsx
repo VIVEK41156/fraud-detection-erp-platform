@@ -1,28 +1,16 @@
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 
-function DashboardLayout({
-  children,
-}) {
+function DashboardLayout({ children }) {
   return (
-    <div className="flex min-h-screen bg-slate-950">
-
-      {/* Sidebar */}
+    <div className="main-layout">
       <Sidebar />
-
-      {/* Main Content */}
-      <div className="ml-[280px] w-full p-8">
-
-        {/* Navbar */}
+      <div className="main-content">
         <Navbar />
-
-        {/* Page Content */}
-        <div>
+        <div className="fade-in-up">
           {children}
         </div>
-
       </div>
-
     </div>
   );
 }
