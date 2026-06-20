@@ -107,38 +107,12 @@ const createTransaction =
 
       // ----------------------
       // REAL IP DETECTION
-      // ----------------------
-      let detectedIp =
-        req.headers[
-          "x-forwarded-for"
-        ] ||
-        req.socket
-          .remoteAddress ||
-        req.ip;
-
-      if (
-        detectedIp ===
-          "::1" ||
-        detectedIp ===
-          "127.0.0.1"
-      ) {
-        try {
-          const ipRes =
-            await axios.get(
-              "https://api.ipify.org?format=json",
-              { timeout: 3000 }
-            );
-
-          detectedIp =
-            ipRes.data.ip;
-        } catch (
-          error
-        ) {
-          console.log(
-            "IP Fetch Error"
-          );
-        }
-      }
+      // IP — use forwarded header directly (Render sets x-forwarded-for)
+      const detectedIp =
+        req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+        req.socket.remoteAddress ||
+        req.ip ||
+        "unknown";
 
       // ----------------------
       // OTP LOGIC
