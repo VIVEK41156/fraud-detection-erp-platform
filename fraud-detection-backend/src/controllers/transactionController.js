@@ -180,108 +180,38 @@ const createTransaction =
                 1000
           );
 
-        // SEND OTP EMAIL
-        try {
-          const transporter =
-            nodemailer.createTransport(
-              {
-                service:
-                  "gmail",
+        // ─────────────────────────────────────────
+        // SEND EMAILS — fire & forget (non-blocking)
+        // Transaction response does NOT wait for email
+        // ─────────────────────────────────────────
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+          connectionTimeout: 5000,
+          greetingTimeout:   5000,
+          socketTimeout:     10000,
+        });
 
-                auth: {
-                  user:
-                    process.env.EMAIL_USER,
+        // OTP email — fire & forget
+        transporter.sendMail({
+          from:    process.env.EMAIL_USER,
+          to:      process.env.EMAIL_USER,
+          subject: "🔐 OTP Verification Required - FraudShield",
+          html:    otpEmailTemplate(otpCode),
+        }).then(() => console.log("OTP email sent ✅"))
+          .catch((e) => console.log("OTP Email Error:", e.message));
 
-                  pass:
-                    process.env.EMAIL_PASS,
-                },
-              }
-            );
-
-          await transporter.sendMail(
-            {
-              from:
-                process.env.EMAIL_USER,
-
-              to:
-                process.env.EMAIL_USER,
-
-              subject:
-                "🔐 OTP Verification Required",
-
-              html:
-                otpEmailTemplate(
-                  otpCode
-                ),
-            }
-          );
-
-          console.log(
-            "OTP email sent ✅"
-          );
-        } catch (
-          error
-        ) {
-          console.log(
-            "OTP Email Error:",
-            error.message
-          );
-        }
-
-        // SEND FRAUD ALERT EMAIL
-        try {
-          const transporter =
-            nodemailer.createTransport(
-              {
-                service:
-                  "gmail",
-
-                auth: {
-                  user:
-                    process.env.EMAIL_USER,
-
-                  pass:
-                    process.env.EMAIL_PASS,
-                },
-              }
-            );
-
-          await transporter.sendMail(
-            {
-              from:
-                process.env.EMAIL_USER,
-
-              to:
-                process.env.EMAIL_USER,
-
-              subject:
-                "🚨 Fraud Alert Detected",
-
-              html:
-                fraudEmailTemplate(
-                  {
-                    merchantName,
-                    amount,
-                    location,
-                    riskScore,
-                    ipAddress:
-                      detectedIp,
-                  }
-                ),
-            }
-          );
-
-          console.log(
-            "Fraud email sent ✅"
-          );
-        } catch (
-          error
-        ) {
-          console.log(
-            "Fraud Email Error:",
-            error.message
-          );
-        }
+        // Fraud alert email — fire & forget
+        transporter.sendMail({
+          from:    process.env.EMAIL_USER,
+          to:      process.env.EMAIL_USER,
+          subject: "🚨 Fraud Alert Detected - FraudShield",
+          html:    fraudEmailTemplate({ merchantName, amount, location, riskScore, ipAddress: detectedIp }),
+        }).then(() => console.log("Fraud alert email sent ✅"))
+          .catch((e) => console.log("Fraud Email Error:", e.message));
       }
 
       // ----------------------
